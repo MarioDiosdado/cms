@@ -29,7 +29,8 @@ function viewEmployees(connection) {
     connection.query("SELECT a.first_name, a.last_name, title, name as Department, salary, CONCAT(b.first_name, ' ', b.last_name) AS Manager  FROM employee a INNER JOIN role ON a.role_id = role.id INNER JOIN department ON role.department_id = department.id INNER JOIN employee b ON b.id = a.manager_id ORDER BY a.id;", function (err, res) {
         if (err) throw err;
         console.table(res);
-        mainMenu();
+
+        mainMenu(connection);
     })
 }
 var b = [];
@@ -109,7 +110,7 @@ function checkDepartment(connection) {
             connection.query("SELECT first_name, last_name, title, salary, name AS Department FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.department_id = department.id WHERE department.name = ?;", department, function (err, res) {
                 if (err) throw err;
                 console.table(res);
-                mainMenu();
+                mainMenu(connection);
             })
         })
 }
