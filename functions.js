@@ -29,7 +29,7 @@ function viewEmployees(connection) {
     connection.query("SELECT a.first_name, a.last_name, title, name as Department, salary, CONCAT(b.first_name, ' ', b.last_name) AS Manager  FROM employee a INNER JOIN role ON a.role_id = role.id INNER JOIN department ON role.department_id = department.id INNER JOIN employee b ON b.id = a.manager_id ORDER BY a.id;", function (err, res) {
         if (err) throw err;
         console.table(res);
-        connection.end;
+        mainMenu();
     })
 }
 var b = [];
@@ -175,36 +175,47 @@ function updateRole(connection) {
     inquirer.prompt([
         { type: "list", name: "name", message: "Select the employee you want to update", choices: employeeId },
         { type: "list", name: "role", message: "Select the new role", choices: roleId }
-     ])
-     //.then(function (data) {
-    //     const name = data.name;
-    //     const role = data.role;
-
-    //     connection.query("UPDATE employee SET role_id = ? WHERE employee.id = ?", roleId, employeeId, function (err, res) {
-    //         if (err) throw err;
-    //         console.log("Success!")
-    //         mainMenu(connection);
-    //     })
-    // })
+    ])
+        .then(function (data) {
+            const name = data.name;
+            const role = data.role;
+            for (i = 0; i < employeeFull.length; i++) {
+                if (employeeFull[i].name === name) {
+                    employ = employeeFull[i].id;
+                }
+            }
+            for (i = 0; i < roleFull.length; i++) {
+                if (roleFull[i].title === role) {
+                    roleF = roleFull[i].id;
+                    console.log(roleF);
+                }
+            }
+            connection.query("UPDATE employee SET role_id = ? WHERE employee.id = ?", [roleF, employ], function (err, res) {
+                if (err) throw err;
+                console.log("Success!")
+                mainMenu(connection);
+            })
+        })
 };
 let employeeId = [];
 let employeeFull = [];
 let roleId = [];
 let roleFull = []
 let employ;
-function getEmployeeId(connection){
-    connection.query("SELECT employee.id, CONCAT(first_name, ' ', last_name) AS name, title, role.id AS role_id FROM employee LEFT JOIN role ON employee.role_id = role.id", function(err, res){
-        if(err) throw err;
-        for( i = 0; i < res.length; i++){
+let roleF;
+function getEmployeeId(connection) {
+    connection.query("SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employee", function (err, res) {
+        if (err) throw err;
+        for (i = 0; i < res.length; i++) {
             employeeId.push(res[i].name);
             employeeFull.push(res[i]);
         } getRoleId(connection);
     })
 }
 function getRoleId(connection) {
-    connection.query("SELECT * FROM role", function(err, res){
-        if(err) throw err;
-        for( i = 0; i < res.length; i++){
+    connection.query("SELECT * FROM role", function (err, res) {
+        if (err) throw err;
+        for (i = 0; i < res.length; i++) {
             roleId.push(res[i].title);
             roleFull.push(res[i]);
         } updateRole(connection);
