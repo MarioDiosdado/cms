@@ -4,7 +4,7 @@ const connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
     user: "root",
-    password: "Laparrilla82",
+    password: "Yourpassword",
     database: "cmsDB"
 });
 //This is the initialization function
