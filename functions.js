@@ -24,6 +24,7 @@ function mainMenu(connection) {
             type: "list", name: "menu", message: "What would you like to do",
             choices: ["View all employees", "View all employees by department", "View employees by role", "Add employee", "Add role", "Add department", "Update employee role"]
         }
+    //Main menu choices and their functions
     ]).then(function (data) {
         if (data.menu === "View all employees") {
             viewEmployees(connection);
@@ -47,7 +48,6 @@ function viewEmployees(connection) {
     connection.query("SELECT a.first_name, a.last_name, title, name as Department, salary, CONCAT(b.first_name, ' ', b.last_name) AS Manager  FROM employee a INNER JOIN role ON a.role_id = role.id INNER JOIN department ON role.department_id = department.id INNER JOIN employee b ON b.id = a.manager_id ORDER BY a.id;", function (err, res) {
         if (err) throw err;
         console.table(res);
-
         mainMenu(connection);
     })
 }
@@ -172,7 +172,6 @@ function checkRole(connection) {
 }
 
 function addRole(connection) {
-    console.log(arrDeptName);
     inquirer.prompt([
         { type: "input", name: "title", message: "What's the name of the role you want to add" },
         { type: "input", name: "salary", message: "What's the salary of the role you want to add" },

@@ -7,12 +7,13 @@ const connection = mysql.createConnection({
     password: "Laparrilla82",
     database: "cmsDB"
 });
-
+//This is the initialization function
 function start(){
     const view = mainMenu(connection);
 }
 
 connection.connect(async () => {
+//Here we call the initialization function
     start();
 });
 
