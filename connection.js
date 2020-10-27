@@ -1,5 +1,5 @@
 const mysql = require("mysql");
-const {mainMenu, viewEmployees, addEmployee} = require("./functions.js");
+const {mainMenu} = require("./functions.js");
 const connection = mysql.createConnection({
     host: "localhost",
     port: 3306,

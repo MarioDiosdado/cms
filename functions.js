@@ -253,6 +253,4 @@ function getRoleId(connection) {
 
 module.exports = {
     mainMenu,
-    viewEmployees,
-    addEmployee
 };
