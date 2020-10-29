@@ -1,16 +1,4 @@
 const inquirer = require("inquirer");
-//Variables
-let arrDepartment = [];
-let arrRole = [];
-const arrDeptName = [];
-const arrDeptId = [];
-let deptId;
-const employeeId = [];
-const employeeFull = [];
-const roleId = [];
-const roleFull = []
-let employ;
-let roleF;
 
 function mainMenu(connection) {
     inquirer.prompt([
@@ -18,7 +6,7 @@ function mainMenu(connection) {
             type: "list", name: "menu", message: "What would you like to do",
             choices: ["View all employees", "View all employees by department", "View employees by role", "Add employee", "Add role", "Add department", "Update employee role"]
         }
-    //Main menu choices and their functions
+        //Main menu choices and their functions
     ]).then(function (data) {
         if (data.menu === "View all employees") {
             viewEmployees(connection);
@@ -34,7 +22,7 @@ function mainMenu(connection) {
             arrayGen(connection);
         } else if (data.menu === "Update employee role") {
             getEmployeeId(connection);
-        } 
+        }
     })
 }
 
@@ -60,7 +48,7 @@ function getManager(connection, roleTitle, roleFull) {
         if (err) throw err;
         let employeeName = res.map(employee => employee.name);
         let managerFull = res.map(employee => employee);
-         addEmployee(connection, roleTitle, roleFull, employeeName, managerFull);
+        addEmployee(connection, roleTitle, roleFull, employeeName, managerFull);
     })
 }
 
@@ -99,7 +87,7 @@ function addDepartment(connection) {
         { type: "input", name: "department", message: "What's the name of the department you want to add?" }
     ]).then(function (data) {
         var department = data.department
-        connection.query("INSERT INTO department (name) VALUES (?)", department, function (err, res) {
+        connection.query("INSERT INTO department (name) VALUES (?)", department, (err, res) => {
             if (err) throw err;
             console.log("Success!")
             mainMenu(connection);
@@ -109,16 +97,15 @@ function addDepartment(connection) {
 
 function getDepartment(connection) {
     arrDepartment = [];
-    connection.query("SELECT name FROM department;", function (err, res) {
+    connection.query("SELECT name FROM department;", (err, res) => {
         if (err) throw err;
-        for (i = 0; i < res.length; i++) {
-            arrDepartment.push(res[i].name);
-        } checkDepartment(connection);
+        const arrDepartment = res.map(a => a.name);
+        checkDepartment(connection, arrDepartment);
     })
 
 }
 
-function checkDepartment(connection) {
+function checkDepartment(connection, arrDepartment) {
     inquirer.prompt([
         { type: "list", name: "departments", message: "Select department", choices: arrDepartment }
     ])
@@ -133,21 +120,18 @@ function checkDepartment(connection) {
 }
 
 function getRole(connection) {
-    connection.query("SELECT title FROM role", function (err, res) {
+    connection.query("SELECT title FROM role", (err, res) => {
         if (err) throw err;
-        arrRole = [];
-        for (i = 0; i < res.length; i++) {
-            arrRole.push(res[i].title);
-        } checkRole(connection);
+        const arrRole = res.map(a => a.title);
+        checkRole(connection, arrRole);
     })
 }
-
-function checkRole(connection) {
+function checkRole(connection, arrRole) {
     inquirer.prompt([
         { type: "list", name: "roles", message: "Select role", choices: arrRole }
     ]).then(function (data) {
         const role = data.roles;
-        connection.query("SELECT first_name, last_name, title FROM employee INNER JOIN role ON employee.role_id = role.id WHERE role.title = ?", role, function (err, res) {
+        connection.query("SELECT first_name, last_name, title FROM employee INNER JOIN role ON employee.role_id = role.id WHERE role.title = ?", role, (err, res) => {
             if (err) throw err;
             console.table(res);
             mainMenu(connection);
@@ -155,19 +139,20 @@ function checkRole(connection) {
     })
 }
 
-function addRole(connection) {
+function addRole(connection, arrDeptName, arrDeptId) {
     inquirer.prompt([
         { type: "input", name: "title", message: "What's the name of the role you want to add" },
         { type: "input", name: "salary", message: "What's the salary of the role you want to add" },
         { type: "list", name: "department", message: "What's the department of the role you want to add", choices: arrDeptName }
     ]).then(function (data) {
         const department = data.department;
-        for (i = 0; i < arrDeptId.length; i++) {
-            if (arrDeptId[i].name === department) {
-                deptId = arrDeptId[i].id;
+        let deptId;
+        arrDeptId.forEach(a => {
+            if (a.name === department) {
+                deptId = a.id;
             }
-        }
-        connection.query("INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)", [data.title, data.salary, deptId], function (err, res) {
+        });
+        connection.query("INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)", [data.title, data.salary, deptId], (err, res) => {
             if (err) throw err;
             console.log("Success!")
             mainMenu(connection);
@@ -176,19 +161,15 @@ function addRole(connection) {
 }
 
 function arrayGen(connection) {
-    connection.query("SELECT id, name FROM department;", function (err, res) {
-        if (err) {
-            throw err;
-        } else {
-            for (i = 0; i < res.length; i++) {
-                arrDeptName.push(res[i].name);
-                arrDeptId.push(res[i]);
-            } addRole(connection);
-        }
+    connection.query("SELECT id, name FROM department;", (err, res) => {
+        if (err) throw err;
+        const arrDeptName = res.map(a => a.name);
+        const arrDeptId = res.map(a => a);
+        addRole(connection, arrDeptName, arrDeptId);
     });
 }
 
-function updateRole(connection) {
+function updateRole(connection, employeeId, employeeFull, roleId, roleFull) {
     inquirer.prompt([
         { type: "list", name: "name", message: "Select the employee you want to update", choices: employeeId },
         { type: "list", name: "role", message: "Select the new role", choices: roleId }
@@ -196,16 +177,18 @@ function updateRole(connection) {
         .then(function (data) {
             const name = data.name;
             const role = data.role;
-            for (i = 0; i < employeeFull.length; i++) {
-                if (employeeFull[i].name === name) {
-                    employ = employeeFull[i].id;
+            let employ;
+            let roleF;
+            employeeFull.forEach(a => {
+                if (a.name === name) {
+                    employ = a.id;
                 }
-            }
-            for (i = 0; i < roleFull.length; i++) {
-                if (roleFull[i].title === role) {
-                    roleF = roleFull[i].id;
+            });
+            roleFull.forEach(a => {
+                if (a.title === role) {
+                    roleF = a.id;
                 }
-            }
+            });
             connection.query("UPDATE employee SET role_id = ? WHERE employee.id = ?", [roleF, employ], function (err, res) {
                 if (err) throw err;
                 console.log("Success!")
@@ -213,24 +196,21 @@ function updateRole(connection) {
             })
         })
 };
-
 function getEmployeeId(connection) {
-    connection.query("SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employee", function (err, res) {
+    connection.query("SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employee", (err, res) => {
         if (err) throw err;
-        for (i = 0; i < res.length; i++) {
-            employeeId.push(res[i].name);
-            employeeFull.push(res[i]);
-        } getRoleId(connection);
+        const employeeId = res.map(a => a.name);
+        const employeeFull = res.map(a => a);
+         getRoleId(connection, employeeId, employeeFull);
     })
 }
 
-function getRoleId(connection) {
-    connection.query("SELECT * FROM role", function (err, res) {
+function getRoleId(connection, employeeId, employeeFull) {
+    connection.query("SELECT * FROM role", (err, res) => {
         if (err) throw err;
-        for (i = 0; i < res.length; i++) {
-            roleId.push(res[i].title);
-            roleFull.push(res[i]);
-        } updateRole(connection);
+        const roleId = res.map(a => a.title);
+        const roleFull = res.map(a => a);
+        updateRole(connection, employeeId, employeeFull, roleId, roleFull);
     })
 }
 
