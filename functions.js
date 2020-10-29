@@ -1,11 +1,5 @@
 const inquirer = require("inquirer");
 //Variables
-const arrRoleB = [];
-const arrRoleBFull = [];
-let arrRoleF;
-let employeName = [];
-const managerFull = [];
-let manageID;
 let arrDepartment = [];
 let arrRole = [];
 const arrDeptName = [];
@@ -53,58 +47,48 @@ function viewEmployees(connection) {
 }
 
 function getRoleB(connection) {
-    connection.query("SELECT * FROM role", function (err, res) {
+    connection.query("SELECT * FROM role", (err, res) => {
         if (err) throw err;
-        for (i = 0; i < res.length; i++) {
-            arrRoleB.push(res[i].title);
-            arrRoleBFull.push(res[i]);
-        } getManager(connection);
+        let roleFull = res.map(test2 => test2);
+        let roleTitle = res.map(test1 => test1.title);
+        getManager(connection, roleTitle, roleFull);
     })
 }
 
-function getManager(connection) {
-    connection.query("SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employee", function (err, res) {
+function getManager(connection, roleTitle, roleFull) {
+    connection.query("SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employee", (err, res) => {
         if (err) throw err;
-        for (i = 0; i < res.length; i++) {
-            employeName.push(res[i].name);
-            managerFull.push(res[i]);
-        } addEmployee(connection);
+        let employeeName = res.map(employee => employee.name);
+        let managerFull = res.map(employee => employee);
+         addEmployee(connection, roleTitle, roleFull, employeeName, managerFull);
     })
 }
 
-function addEmployee(connection) {
+function addEmployee(connection, roleTitle, roleFull, employeeName, managerFull) {
 
     inquirer.prompt([
         { type: "input", name: "firstName", message: "What's the employee first name?" },
         { type: "input", name: "lastName", message: "What's the employee last name?" },
-        { type: "list", name: "roleID", message: "What's the employee's role?", choices: arrRoleB },
-        { type: "list", name: "managerID", message: "Select your manager", choices: employeName }
+        { type: "list", name: "roleID", message: "What's the employee's role?", choices: roleTitle },
+        { type: "list", name: "managerID", message: "Select your manager", choices: employeeName }
     ])
         .then(function (data) {
-            const manager = data.managerID;
-            const roleIdB = data.roleID;
-
-            for (i = 0; i < arrRoleBFull.length; i++) {
-
-                if (arrRoleBFull[i].title === roleIdB) {
-                    arrRoleF = arrRoleBFull[i].id;
-
+            let insertRole;
+            let managerID;
+            roleFull.forEach(role => {
+                if (role.title === data.roleID) {
+                    insertRole = role.id;
                 }
-            }
-
-            for (i = 0; i < managerFull.length; i++) {
-                if (managerFull[i].name === manager) {
-                    manageID = managerFull[i].id;
+            })
+            managerFull.forEach(manager => {
+                if (manager.name === data.managerID) {
+                    managerID = manager.id;
                 }
-            }
-
-            connection.query("INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?);", [data.firstName, data.lastName, arrRoleF, manageID], function (err, res) {
-                if (err) {
-                    throw err;
-                } else {
-                    console.log("Success!")
-                    mainMenu(connection);
-                }
+            })
+            connection.query("INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?);", [data.firstName, data.lastName, insertRole, managerID], (err, res) => {
+                if (err) throw err;
+                console.log("Success!")
+                mainMenu(connection);
                 connection.end;
             })
         })
